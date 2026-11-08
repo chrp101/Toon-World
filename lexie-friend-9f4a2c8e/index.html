@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+		<title>Toon World — Lexie's Friend Invite</title>
+		<style>
+html, body, #canvas {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+body {
+	color: white;
+	background-color: #121712;
+	overflow: hidden;
+	touch-action: none;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+}
+
+#canvas {
+	display: block;
+}
+
+#canvas:focus {
+	outline: none;
+}
+
+#status, #status-splash, #status-progress {
+	position: absolute;
+	left: 0;
+	right: 0;
+}
+
+#status, #status-splash {
+	top: 0;
+	bottom: 0;
+}
+
+#status {
+	background-color: #182018;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	visibility: hidden;
+}
+
+#status-splash {
+	max-height: 100%;
+	max-width: 100%;
+	margin: auto;
+}
+
+#status-splash.show-image--false {
+	display: none;
+}
+
+#status-splash.fullsize--true {
+	height: 100%;
+	width: 100%;
+	object-fit: contain;
+}
+
+#status-splash.use-filter--false {
+	image-rendering: pixelated;
+}
+
+#status-progress, #status-notice {
+	display: none;
+}
+
+#status-progress {
+	bottom: 10%;
+	width: 60%;
+	max-width: 360px;
+	height: 14px;
+	margin: 0 auto;
+}
+
+#status-loading-label {
+	position: absolute;
+	bottom: 14%;
+	color: #b9f6ca;
+	font-size: 15px;
+	font-weight: 600;
+	text-align: center;
+	text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+}
+
+#status-notice {
+	background-color: #5b3943;
+	border-radius: 0.5rem;
+	border: 1px solid #9b3943;
+	color: #e0e0e0;
+	line-height: 1.3;
+	margin: 0 2rem;
+	overflow: hidden;
+	padding: 1rem;
+	text-align: center;
+	z-index: 1;
+}
+
+#invite-gate {
+	position: fixed;
+	inset: 0;
+	background: radial-gradient(circle at center, #253826 0%, #111812 100%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 9999;
+	padding: 20px;
+}
+
+.gate-card {
+	background: rgba(24, 34, 25, 0.96);
+	border: 3px solid #66bb6a;
+	border-radius: 22px;
+	padding: 28px 24px;
+	max-width: 360px;
+	width: 100%;
+	text-align: center;
+	box-shadow: 0 16px 48px rgba(0,0,0,0.75);
+}
+
+.gate-badge {
+	font-size: 38px;
+	margin-bottom: 8px;
+}
+
+.gate-title {
+	font-size: 22px;
+	font-weight: 800;
+	color: #e8f5e9;
+	margin: 0 0 8px 0;
+}
+
+.gate-sub {
+	font-size: 14px;
+	color: #a5d6a7;
+	margin: 0 0 20px 0;
+	line-height: 1.4;
+}
+
+.gate-input {
+	width: 100%;
+	box-sizing: border-box;
+	padding: 14px 16px;
+	font-size: 18px;
+	font-weight: 700;
+	text-align: center;
+	letter-spacing: 2px;
+	text-transform: uppercase;
+	border-radius: 12px;
+	border: 2px solid #4caf50;
+	background: #0f1610;
+	color: #ffffff;
+	outline: none;
+	margin-bottom: 14px;
+}
+
+.gate-btn {
+	width: 100%;
+	padding: 14px;
+	font-size: 17px;
+	font-weight: 800;
+	color: #0d1b0e;
+	background: linear-gradient(135deg, #81c784, #4caf50);
+	border: none;
+	border-radius: 12px;
+	cursor: pointer;
+}
+
+.gate-btn:active {
+	transform: scale(0.98);
+}
+
+.gate-err {
+	color: #ff8a80;
+	font-size: 13px;
+	font-weight: 600;
+	margin-top: 12px;
+	min-height: 18px;
+}
+		</style>
+		<link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
+		<link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
+		<link rel="manifest" href="index.manifest.json">
+	</head>
+	<body>
+		<div id="invite-gate">
+			<div class="gate-card">
+				<div class="gate-badge">🌼🔒🫧</div>
+				<h1 class="gate-title">Dandy's Secret Invite</h1>
+				<p class="gate-sub">Encrypted Private Server for Lexie &amp; Friend.<br>Enter your secret friend code to decrypt &amp; play:</p>
+				<input id="passcode-input" class="gate-input" type="text" placeholder="SECRET CODE" autocomplete="off" autocapitalize="characters" />
+				<button id="unlock-btn" class="gate-btn">UNLOCK &amp; PLAY</button>
+				<div id="gate-err" class="gate-err"></div>
+			</div>
+		</div>
+
+		<canvas id="canvas">
+			Your browser does not support the canvas tag.
+		</canvas>
+
+		<div id="status">
+			<img id="status-splash" class="show-image--true fullsize--true use-filter--true" src="index.png" alt="">
+			<div id="status-loading-label">Decrypting &amp; Loading Toon World (38 MB)...</div>
+			<progress id="status-progress"></progress>
+			<div id="status-notice"></div>
+		</div>
+
+		<script src="index.js?v=4"></script>
+		<script>
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":true,"fileSizes":{"index.pck":313920,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4,"serviceWorker":""};
+const GODOT_THREADS_ENABLED = false;
+const engine = new Engine(GODOT_CONFIG);
+
+(function () {
+	const statusOverlay = document.getElementById('status');
+	const statusProgress = document.getElementById('status-progress');
+	const statusNotice = document.getElementById('status-notice');
+	const statusLabel = document.getElementById('status-loading-label');
+	const inviteGate = document.getElementById('invite-gate');
+	const passInput = document.getElementById('passcode-input');
+	const unlockBtn = document.getElementById('unlock-btn');
+	const gateErr = document.getElementById('gate-err');
+
+	let initializing = true;
+	let statusMode = '';
+
+	function setStatusMode(mode) {
+		if (statusMode === mode || !initializing) {
+			return;
+		}
+		if (mode === 'hidden') {
+			statusOverlay.remove();
+			initializing = false;
+			return;
+		}
+		statusOverlay.style.visibility = 'visible';
+		statusProgress.style.display = mode === 'progress' ? 'block' : 'none';
+		statusNotice.style.display = mode === 'notice' ? 'block' : 'none';
+		statusMode = mode;
+	}
+
+	function setStatusNotice(text) {
+		while (statusNotice.lastChild) {
+			statusNotice.removeChild(statusNotice.lastChild);
+		}
+		const lines = text.split('\n');
+		lines.forEach((line) => {
+			statusNotice.appendChild(document.createTextNode(line));
+			statusNotice.appendChild(document.createElement('br'));
+		});
+	}
+
+	function displayFailureNotice(err) {
+		console.error(err);
+		if (err instanceof Error) {
+			setStatusNotice(err.message);
+		} else if (typeof err === 'string') {
+			setStatusNotice(err);
+		} else {
+			setStatusNotice('An unknown error occurred.');
+		}
+		setStatusMode('notice');
+		initializing = false;
+	}
+
+	async function decryptPackWithCode(rawCode) {
+		const cleanCode = (rawCode || '').trim().toUpperCase();
+		if (!cleanCode) {
+			throw new Error('Please enter the secret friend code.');
+		}
+		const resp = await fetch('index.pck.enc?v=4');
+		if (!resp.ok) {
+			throw new Error('Could not download encrypted pack.');
+		}
+		const packedBuf = await resp.arrayBuffer();
+		const packedBytes = new Uint8Array(packedBuf);
+		const salt = packedBytes.slice(0, 16);
+		const iv = packedBytes.slice(16, 28);
+		const ciphertext = packedBytes.slice(28);
+
+		const enc = new TextEncoder();
+		const keyMaterial = await window.crypto.subtle.importKey(
+			'raw',
+			enc.encode(cleanCode),
+			{ name: 'PBKDF2' },
+			false,
+			['deriveKey']
+		);
+		const aesKey = await window.crypto.subtle.deriveKey(
+			{
+				name: 'PBKDF2',
+				salt: salt,
+				iterations: 100000,
+				hash: 'SHA-256'
+			},
+			keyMaterial,
+			{ name: 'AES-GCM', length: 256 },
+			false,
+			['decrypt']
+		);
+		return await window.crypto.subtle.decrypt(
+			{ name: 'AES-GCM', iv: iv },
+			aesKey,
+			ciphertext
+		);
+	}
+
+	async function unlockAndLaunch(code) {
+		gateErr.textContent = 'Decrypting game pack...';
+		unlockBtn.disabled = true;
+		try {
+			const decryptedPck = await decryptPackWithCode(code);
+			inviteGate.remove();
+			setStatusMode('progress');
+
+			engine.config.update({
+				'onProgress': function (current, total) {
+					if (current > 0 && total > 0) {
+						statusProgress.value = current;
+						statusProgress.max = total;
+						const pct = Math.min(100, Math.round((current / total) * 100));
+						statusLabel.textContent = 'Loading Toon World Engine... ' + pct + '%';
+					} else {
+						statusProgress.removeAttribute('value');
+						statusProgress.removeAttribute('max');
+					}
+				}
+			});
+			engine.config.args = ['--main-pack', 'index.pck'].concat(engine.config.args);
+			await Promise.all([
+				engine.init('index'),
+				engine.preloadFile(decryptedPck, 'index.pck')
+			]);
+			statusLabel.textContent = 'Starting Toon World...';
+			await engine.start();
+			setStatusMode('hidden');
+		} catch (e) {
+			unlockBtn.disabled = false;
+			gateErr.textContent = '❌ Invalid secret code! Access denied.';
+		}
+	}
+
+	unlockBtn.addEventListener('click', () => {
+		unlockAndLaunch(passInput.value);
+	});
+	passInput.addEventListener('keydown', (e) => {
+		if (e.key === 'Enter') {
+			unlockAndLaunch(passInput.value);
+		}
+	});
+
+	// Auto-unlock if URL hash contains the secret key (e.g. #POPPY2026)
+	const hashKey = decodeURIComponent((window.location.hash || '').replace(/^#/, '').replace(/^key=/i, '')).trim();
+	if (hashKey) {
+		passInput.value = hashKey;
+		unlockAndLaunch(hashKey);
+	}
+}());
+		</script>
+	</body>
+</html>
