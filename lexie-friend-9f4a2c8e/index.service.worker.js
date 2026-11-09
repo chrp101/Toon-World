@@ -4,7 +4,7 @@
 // Incrementing CACHE_VERSION will kick off the install event and force
 // previously cached resources to be updated from the network.
 /** @type {string} */
-const CACHE_VERSION = '1794082468|1223119';
+const CACHE_VERSION = '1794181239|1275910';
 /** @type {string} */
 const CACHE_PREFIX = 'Toon World-sw-cache-';
 const CACHE_NAME = CACHE_PREFIX + CACHE_VERSION;
